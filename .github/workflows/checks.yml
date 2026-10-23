@@ -1,0 +1,22 @@
+name: Native checks
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: capture-checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  swift:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Pip tests
+        run: swift test --jobs 2
+      - name: Pip package
+        run: ./scripts/build-replica.sh
+      - name: Baseline tests
+        run: swift test --package-path baseline --jobs 2
+      - name: Baseline package
+        run: ./scripts/build-baseline.sh

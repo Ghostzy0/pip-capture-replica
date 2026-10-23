@@ -1,0 +1,7 @@
+.build/
+.local-evidence/
+build/
+*.app/
+.DS_Store
+
+baseline/.build/

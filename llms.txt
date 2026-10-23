@@ -1,0 +1,15 @@
+# Capture Replica
+
+> Experimental MIT macOS voice/text inbox. Local retained audio, optional explicit whisper.cpp transcription, original neutral and Pip appearances, Core/Plus variants. No hosted core account or telemetry.
+
+- [Overview and variants](https://github.com/Ghostzy0/pip-capture-replica/blob/main/README.md)
+- [Setup](https://github.com/Ghostzy0/pip-capture-replica/blob/main/docs/AI-SETUP.md)
+- [Workflows](https://github.com/Ghostzy0/pip-capture-replica/blob/main/docs/WORKFLOWS.md)
+- [FAQ](https://github.com/Ghostzy0/pip-capture-replica/blob/main/docs/FAQ.md)
+- [Test evidence and limitations](https://github.com/Ghostzy0/pip-capture-replica/blob/main/TESTING.md)
+- [Provenance](https://github.com/Ghostzy0/pip-capture-replica/blob/main/UPSTREAM.md)
+- [Releases](https://github.com/Ghostzy0/pip-capture-replica/releases)
+
+Transcription may be wrong. Source recall quotes matching text and is not generative semantic answering. Actual microphone, platform and accessibility acceptance must be read from TESTING. Weights are separate. No affiliation with referenced products is implied. This file is a documentation index, not a discoverability or ranking guarantee.
+
+Primary-reference fidelity is incomplete. Shared source commit/file hashes are in SHARED-CORE.json. This source does not reproduce live/Ask/Meetings/global-shortcut workflows.
