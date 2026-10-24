@@ -2,7 +2,7 @@
 
 ## 0.1.0-alpha.2 candidate — 24 October 2026
 
-Shared recovery preserves recording identity across post-commit draft cleanup failures and checks saved audio before removing the retained source. Replica applies its existing Light/Dark/Device preference.49 shared regressions and local package/configuration/ad-hoc signature checks passed. Current exported-checkout and changed native-path qualification remain separate; signed-in reference fidelity and downloadable binaries are incomplete.
+Shared recovery preserves recording identity across post-commit draft cleanup failures and checks saved audio before removing the retained source. Replica applies its existing Light/Dark/Device preference. 49 shared regressions and local package/configuration/ad-hoc signature checks passed. Current exported-checkout and changed native-path qualification remain separate; signed-in reference fidelity and downloadable binaries are incomplete.
 
 ## 0.1.0-alpha.1 — source preview
 

@@ -4,7 +4,7 @@ An experimental original local macOS reconstruction project targeting documented
 
 This is the canonical Neutral Core reproduction effort. [Pip Capture](https://github.com/Ghostzy0/pip-capture) is the separate custom repository for Neutral Plus, Pip Core and Pip Plus. The source is shared through an exact [commit and file-hash pin](SHARED-CORE.json), rather than four drifting backends. The additional MIT WhisperNotes snapshot is provenance comparison only, not the primary target.
 
-**Current source candidate:0.1.0-alpha.2.** Published source previews remain experimental; no qualified downloadable binary is offered.
+**Current source candidate: 0.1.0-alpha.2.** Published source previews remain experimental; no qualified downloadable binary is offered.
 
 ## What works and what remains
 

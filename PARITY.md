@@ -15,10 +15,12 @@
 | Retention/delete/recovery | Voicenotes Basic visible history documented | Delete confirmation, no trash | Explicit recoverable trash, purge confirmation, retention preview default-off, unfinished draft recovery |
 | Offline/missing speech files | Local-only WhisperNotes documented | File path configuration | Local text/audio library independent of speech files; missing-tool/model failure preserves sources |
 | Live transcript/speakers | Voicenotes docs | Voxtral optional unqualified | Not implemented; batch timestamps only |
-| UI | Mem/Voicenotes account screens not inspected yet | Upstream SwiftUI | Neutral system surfaces/type or Pip Paper light/dark/Oat; earlier Pip render observed, final matrix review pending |
+| UI | Voicenotes 2.3.7 Welcome/sign-in observed; signed-in workflows and Mem account screens unobserved | Upstream SwiftUI | Neutral system surfaces/type or Pip Paper light/dark/Oat; earlier Pip render observed, final matrix review pending |
 
 Exact upstream original build/test evidence: release compilation 13.59 s; 127 tests/0 failures. Original build.sh resource assertion failed after compile; baseline export repairs packaging without claiming original script success. Only synthetic app content is eligible for public screenshots. Reference media is not an app asset.
 
 Source documentation: [Mem Voice Mode](https://get.mem.ai/features/voice), [Mem Mac](https://get.mem.ai/download/mac), [Voicenotes Mac](https://help.voicenotes.com/en/articles/11161004-how-to-use-voicenotes-on-mac), [WhisperNotes](https://github.com/reidemeister94/whisper-notes). Documentation is not native observation or demand validation.
 
-Plus (both appearances) adds the same collapsible in-window recorder and selectable library tag filter. These are additions to the declared Core workflow, not reference parity claims.42 shared tests and all four package builds pass; final native Plus acceptance remains pending.
+Plus (both appearances) adds the same collapsible in-window recorder and selectable library tag filter. These are additions to the declared Core workflow, not reference parity claims. 42 shared tests and all four package builds pass; final native Plus acceptance remains pending.
+
+24 October 2026 candidate: 49 shared tests and all four custom packages plus the separate replica passed local source qualification. Recovery retry identity and retained-source safety have new regressions. The changed recorder and appearance paths still need native acceptance. See [current test evidence](TESTING.md); the 42-test result above is the earlier 23 October snapshot. Clean exported-checkout qualification is recorded separately.

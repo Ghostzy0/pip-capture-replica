@@ -2,7 +2,7 @@
 
 ## Current candidate — 24 October 2026
 
-Replica0.1.0-alpha.2 uses the deliberately updated shared-source pin.49 shared tests passed with zero failures/skips, including recovery retry/reopen/source safety and optional metadata compatibility. The shared source and local replica package/configuration/ad-hoc signature checks passed. This does not qualify new native appearance, microphone, full accessibility, signed-in reference workflows or complete fidelity. Previous23October reference/ASR/comparison evidence is retained below for unchanged paths; clean exported-checkout evidence is separate.
+Replica 0.1.0-alpha.2 uses the deliberately updated shared-source pin. 49 shared tests passed with zero failures/skips, including recovery retry/reopen/source safety and optional metadata compatibility. The shared source and local replica package/configuration/ad-hoc signature checks passed. This does not qualify new native appearance, microphone, full accessibility, signed-in reference workflows or complete fidelity. Previous 23 October reference/ASR/comparison evidence is retained below for unchanged paths; clean exported-checkout evidence is separate.
 
 23 October2026. Qualification host: Apple Silicon arm64, macOS27.0.1, Swift6.4, full Xcode. Deployment target macOS14; older OS/Intel runtime unverified.
 
@@ -40,7 +40,7 @@ Metrics are raw `/usr/bin/time -l` invocation reports on a shared host. Warmup, 
 
 ## Qualification patch2 / separate replica
 
-Final Core0.1.0-alpha.2 and Plus0.2.0-alpha.2 source passed42shared tests. All four packages passed signature verification and their own non-UI configuration diagnostic, checking actual name/bundleID/storage/version/theme/extras flags. The separate Capture Replica0.1.0-alpha.1 also built and passed signature/configuration checks with com.pipreps.capture.replica and its own Capture Replica storage folder. These are executable bundle checks, not native UI acceptance.
+Final Core 0.1.0-alpha.2 and Plus 0.2.0-alpha.2 source passed42shared tests. All four packages passed signature verification and their own non-UI configuration diagnostic, checking actual name/bundleID/storage/version/theme/extras flags. The separate Capture Replica 0.1.0-alpha.1 also built and passed signature/configuration checks with com.pipreps.capture.replica and its own Capture Replica storage folder. These are executable bundle checks, not native UI acceptance.
 
 The last native slice exercised alpha1 Pip Plus tagfilter, idle recorder collapse and CmdOptionR expansion, and Pip Core tag editing/CmdS save. No microphone started. It exposed selected-row contrast under a purple macOS accent. Patch2 corrects focused/unfocused text colors in source; its final rendered contrast is pending. Computer-use disconnected while opening Settings and failed to reconnect after a reset, so neutral/replica, dark/Oat, minimumwidth and remaining assistive/native workflows remain unverified. Owned apps were stopped and no new grants were requested. Downloadable binary release is withheld pending this UI gate; source remains experimental.
 
