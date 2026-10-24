@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/Ghostzy0/pip-capture",
-  "commit": "18c8534bdf291f62a116143c5afae1a76c851f57",
+  "commit": "af6ccdac44dcf6bca46c07e01cb8180b6a4fe74c",
   "license": "MIT",
   "note": "Vendored exact Swift source snapshot; update pin/hashes deliberately, no runtime download. UI selected by replica bundle flag.",
   "sha256": {
