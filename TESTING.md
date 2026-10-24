@@ -1,5 +1,9 @@
 # Test evidence
 
+## Current candidate — 24 October 2026
+
+Replica0.1.0-alpha.2 uses the deliberately updated shared-source pin.49 shared tests passed with zero failures/skips, including recovery retry/reopen/source safety and optional metadata compatibility. The shared source and local replica package/configuration/ad-hoc signature checks passed. This does not qualify new native appearance, microphone, full accessibility, signed-in reference workflows or complete fidelity. Previous23October reference/ASR/comparison evidence is retained below for unchanged paths; clean exported-checkout evidence is separate.
+
 23 October2026. Qualification host: Apple Silicon arm64, macOS27.0.1, Swift6.4, full Xcode. Deployment target macOS14; older OS/Intel runtime unverified.
 
 | Check | Executed result | Limits |

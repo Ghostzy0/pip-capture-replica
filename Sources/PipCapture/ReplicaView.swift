@@ -5,6 +5,7 @@ import CaptureCore
 /// Selected only by the separate replica bundle configuration.
 struct ReplicaView: View {
     @ObservedObject var model: CaptureModel
+    @AppStorage("lookMode") private var lookMode = "light"
     @Environment(\.colorScheme) private var scheme
 
     private var title: String {
@@ -48,6 +49,7 @@ struct ReplicaView: View {
         .font(.system(size: 14))
         .foregroundStyle(Color.primary)
         .background(Color(nsColor: .textBackgroundColor))
+        .preferredColorScheme(lookMode == "system" ? nil : lookMode == "dark" ? .dark : .light)
         .frame(minWidth: 780, minHeight: 580)
         .sheet(isPresented: $model.recordingSheet) { RecordingSheet(model: model, recorder: model.recorder) }
         .sheet(isPresented: $model.settingsSheet) { CaptureSettings(model: model) }

@@ -32,7 +32,7 @@ final class CaptureModel: ObservableObject {
     private var transcriptionGeneration = UUID()
     private var terminationObserver: NSObjectProtocol?
 
-    init(directory: URL? = nil, edition: AppEdition = .current) {
+    init(directory: URL? = nil, edition: AppEdition = .current, fileManager: FileManager = .default) {
         self.edition = edition
         let root: URL
         if let directory { root = directory }
@@ -41,7 +41,7 @@ final class CaptureModel: ObservableObject {
         } else {
             root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent(edition.storageName, isDirectory: true)
         }
-        store = CaptureStore(directory: root)
+        store = CaptureStore(directory: root, fileManager: fileManager)
         recorder = CaptureRecorder(draftsDirectory: root.appendingPathComponent("drafts", isDirectory: true))
         load()
     }
@@ -143,12 +143,13 @@ final class CaptureModel: ObservableObject {
     @discardableResult func saveRecording() -> Bool {
         do {
             let result = try recorder.stop()
-            let note = try store.importAudio(from: result.url, title: "Voice capture", duration: result.duration)
-            // Original source and duration enter the library in one atomic commit.
-            var draftRemains = false
-            do { try FileManager.default.removeItem(at: result.url) } catch { draftRemains = true }
+            let note = try store.recoverDraft(at: result.url, title: "Voice capture", duration: result.duration)
+            // The note commit is durable before the original recorder draft is removed.
+            var cleanupPending = false
+            do { try store.finishDraftRecovery(at: result.url, for: note) }
+            catch { cleanupPending = true }
             refresh(); refreshDrafts(); section = .inbox; folder = ""; query = ""; selectedTag = ""; selectedID = note.id; recordingSheet = false
-            message = draftRemains ? "Audio saved. A draft copy remains in storage for you to inspect." : "Audio saved on this Mac. You can add a transcript when speech files are ready."
+            message = cleanupPending ? "Audio saved. Draft cleanup is pending; retry recovery to finish removing the retained draft." : "Audio saved on this Mac. You can add a transcript when speech files are ready."
             return true
         } catch {
             refresh(); refreshDrafts()
@@ -161,9 +162,20 @@ final class CaptureModel: ObservableObject {
         catch { message = "Recording drafts could not be checked. Open storage to inspect the retained files." }
     }
     func recoverDraft(_ draft: RecordingDraft) {
-        perform("The draft could not be recovered. Its source file is kept.") {
-            let note = try store.recoverDraft(draft, title: "Recovered voice capture"); try store.discardDraft(draft); recoveredDrafts = try store.drafts()
+        do {
+            let note = try store.recoverDraft(draft, title: "Recovered voice capture")
             section = .inbox; folder = ""; query = ""; selectedTag = ""; selectedID = note.id
+            do {
+                try store.finishDraftRecovery(draft, for: note)
+                recoveredDrafts = try store.drafts()
+                refresh(); message = "Recording recovered and its draft copy removed."
+            } catch {
+                refresh(); refreshDrafts()
+                message = "Recording recovered. Draft cleanup is pending; retry recovery to finish removing the retained draft."
+            }
+        } catch {
+            refresh(); refreshDrafts()
+            message = "The draft could not be recovered. Its source file is kept."
         }
     }
     func transcribe(_ note: CaptureNote) {

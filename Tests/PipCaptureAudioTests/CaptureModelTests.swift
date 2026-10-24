@@ -1,16 +1,29 @@
 import CaptureCore
-import Darwin
 import Foundation
 import XCTest
 @testable import PipCapture
+
+private final class FailOnceRemovingFileManager: FileManager {
+    private var failedURL: URL?
+
+    func failOnceRemoving(_ url: URL) { failedURL = url.standardizedFileURL }
+
+    override func removeItem(at URL: URL) throws {
+        if failedURL == URL.standardizedFileURL {
+            failedURL = nil
+            throw CocoaError(.fileWriteNoPermission)
+        }
+        try super.removeItem(at: URL)
+    }
+}
 
 /// Independent round-one regressions. These use the real editor/store path with
 /// synthetic data and never request microphone access or launch a recogniser.
 final class CaptureModelTests: XCTestCase {
     @MainActor
-    private func withModel(_ work: (CaptureModel, URL) throws -> Void) throws {
+    private func withModel(fileManager: FileManager = .default, _ work: (CaptureModel, URL) throws -> Void) throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("capture-model-audit-" + UUID().uuidString)
-        let model = CaptureModel(directory: root)
+        let model = CaptureModel(directory: root, fileManager: fileManager)
         defer { try? FileManager.default.removeItem(at: root) }
         XCTAssertFalse(model.loadFailure)
         try work(model, root)
@@ -107,6 +120,35 @@ final class CaptureModelTests: XCTestCase {
             XCTAssertNil(model.store.note(id: pending.id)?.trashedAt)
             XCTAssertEqual(model.edits[pending.id]?.body, pending.body)
             XCTAssertEqual(try Data(contentsOf: model.store.indexURL), diskBefore)
+        }
+    }
+
+    @MainActor
+    func testRecoveryReportsCommittedNoteWhenDraftCleanupIsPending() throws {
+        let failingFileManager = FailOnceRemovingFileManager()
+        try withModel(fileManager: failingFileManager) { model, _ in
+            let draftURL = model.store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+            let bytes = Data([0, 7, 8, 255, 1]); try bytes.write(to: draftURL)
+            let draft = try XCTUnwrap(model.store.drafts().first)
+            failingFileManager.failOnceRemoving(draftURL)
+
+            model.recoverDraft(draft)
+
+            let committed = try XCTUnwrap(model.store.notes.first)
+            XCTAssertEqual(model.store.notes.count, 1)
+            XCTAssertEqual(model.selectedID, committed.id)
+            XCTAssertTrue(model.message?.localizedCaseInsensitiveContains("recovered") == true)
+            XCTAssertTrue(model.message?.localizedCaseInsensitiveContains("cleanup is pending") == true)
+            XCTAssertTrue(model.recoveredDrafts.contains(where: { $0.url.standardizedFileURL == draftURL.standardizedFileURL }))
+            XCTAssertTrue(FileManager.default.fileExists(atPath: draftURL.path))
+            XCTAssertEqual(try Data(contentsOf: XCTUnwrap(model.store.audioURL(for: committed))), bytes)
+
+            // The injected unlink failure is one-shot; retry resolves the same note and removes only the draft copy.
+            model.recoverDraft(draft)
+            XCTAssertEqual(model.store.notes.map(\.id), [committed.id])
+            XCTAssertEqual(model.selectedID, committed.id)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: draftURL.path))
+            XCTAssertFalse(model.recoveredDrafts.contains(where: { $0.url.standardizedFileURL == draftURL.standardizedFileURL }))
         }
     }
 }

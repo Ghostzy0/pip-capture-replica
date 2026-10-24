@@ -24,10 +24,10 @@ cleanup() { if [[ -n "$stage" && -d "$stage" ]]; then rm -rf -- "$stage"; fi; }
 trap cleanup EXIT
 for edition in "${editions[@]}"; do
     case "$edition" in
-        neutral-core) name="Capture Neutral Core"; identifier="com.pipreps.capture.neutral.core"; version="0.1.0-alpha.2"; build_number=1 ;;
-        neutral-plus) name="Capture Neutral Plus"; identifier="com.pipreps.capture.neutral.plus"; version="0.2.0-alpha.2"; build_number=2 ;;
-        pip-core) name="Pip Capture"; identifier="com.pipreps.capture"; version="0.1.0-alpha.2"; build_number=1 ;;
-        pip-plus) name="Pip Capture Plus"; identifier="com.pipreps.capture.plus"; version="0.2.0-alpha.2"; build_number=2 ;;
+        neutral-core) name="Capture Neutral Core"; identifier="com.pipreps.capture.neutral.core"; version="0.1.0-alpha.3"; build_number=3 ;;
+        neutral-plus) name="Capture Neutral Plus"; identifier="com.pipreps.capture.neutral.plus"; version="0.2.0-alpha.3"; build_number=3 ;;
+        pip-core) name="Pip Capture"; identifier="com.pipreps.capture"; version="0.1.0-alpha.3"; build_number=3 ;;
+        pip-plus) name="Pip Capture Plus"; identifier="com.pipreps.capture.plus"; version="0.2.0-alpha.3"; build_number=3 ;;
     esac
     stage="$(mktemp -d build/.package-XXXXXX)"
     candidate="$stage/$name.app"

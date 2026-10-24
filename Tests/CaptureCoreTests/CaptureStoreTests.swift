@@ -171,7 +171,7 @@ final class CaptureStoreTests: XCTestCase {
         XCTAssertTrue(final.notes.isEmpty); XCTAssertFalse(FileManager.default.fileExists(atPath: staged.path))
     }
 
-    func testDraftRecoveryPreservesOriginalUntilExplicitDiscard() throws {
+    func testDraftRecoveryPreservesOriginalUntilGuardedFinish() throws {
         let draftURL = store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
         let bytes = Data([0, 10, 250, 9]); try bytes.write(to: draftURL)
         let restarted = CaptureStore(directory: store.directory); try restarted.load()
@@ -179,7 +179,117 @@ final class CaptureStoreTests: XCTestCase {
         let note = try restarted.recoverDraft(draft)
         XCTAssertEqual(try Data(contentsOf: XCTUnwrap(restarted.audioURL(for: note))), bytes)
         XCTAssertTrue(FileManager.default.fileExists(atPath: draftURL.path))
-        try restarted.discardDraft(draft); XCTAssertFalse(FileManager.default.fileExists(atPath: draftURL.path))
+        try restarted.finishDraftRecovery(draft, for: note); XCTAssertFalse(FileManager.default.fileExists(atPath: draftURL.path))
+    }
+
+    func testPathRecoveryPersistsMeasuredDurationAndRetriesSameIdentity() throws {
+        let sourceURL = store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        let bytes = Data([2, 4, 6, 8]); try bytes.write(to: sourceURL)
+
+        let first = try store.recoverDraft(at: sourceURL, title: "Voice capture", duration: 12.75)
+        let retried = try store.recoverDraft(at: sourceURL, title: "Different retry title", duration: 99)
+
+        XCTAssertEqual(retried.id, first.id)
+        XCTAssertEqual(store.notes.count, 1)
+        XCTAssertEqual(retried.title, "Voice capture")
+        XCTAssertEqual(retried.duration, 12.75, accuracy: 0.001)
+        XCTAssertEqual(retried.recoveredDraftFilename, sourceURL.lastPathComponent)
+        XCTAssertEqual(retried.recoveredDraftFingerprint, first.recoveredDraftFingerprint)
+        try store.finishDraftRecovery(at: sourceURL, for: retried)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: sourceURL.path))
+    }
+
+    func testRepeatedDraftRecoveryReusesCommittedNoteAcrossReopen() throws {
+        let draftURL = store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        let bytes = Data([0, 12, 255, 4, 0, 8]); try bytes.write(to: draftURL)
+
+        let first = try XCTUnwrap(store.drafts().first)
+        let recovered = try store.recoverDraft(first, title: "Recovery")
+        XCTAssertEqual(try Data(contentsOf: XCTUnwrap(store.audioURL(for: recovered))), bytes)
+
+        let reopened = CaptureStore(directory: store.directory); try reopened.load()
+        let sameDraft = try XCTUnwrap(reopened.drafts().first)
+        let retried = try reopened.recoverDraft(sameDraft, title: "Recovery")
+
+        XCTAssertEqual(retried.id, recovered.id)
+        XCTAssertEqual(reopened.notes.map(\.id), [recovered.id])
+        XCTAssertEqual(try Data(contentsOf: XCTUnwrap(reopened.audioURL(for: retried))), bytes)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: draftURL.path))
+    }
+
+    func testDraftWithSameFilenameAndChangedBytesCreatesDistinctRecovery() throws {
+        let draftURL = store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        let firstBytes = Data([1, 2, 3, 4]); try firstBytes.write(to: draftURL)
+        let originalDraft = try XCTUnwrap(store.drafts().first)
+        let first = try store.recoverDraft(originalDraft, title: "First recovery")
+
+        let changedBytes = Data([1, 2, 3, 5]); try changedBytes.write(to: draftURL)
+        let changedDraft = try XCTUnwrap(store.drafts().first)
+        XCTAssertEqual(changedDraft.filename, originalDraft.filename)
+        let second = try store.recoverDraft(changedDraft, title: "Changed recovery")
+
+        XCTAssertNotEqual(second.id, first.id)
+        XCTAssertEqual(store.notes.count, 2)
+        XCTAssertEqual(try Data(contentsOf: XCTUnwrap(store.audioURL(for: first))), firstBytes)
+        XCTAssertEqual(try Data(contentsOf: XCTUnwrap(store.audioURL(for: second))), changedBytes)
+        XCTAssertEqual(try store.recoverDraft(changedDraft, title: "Changed recovery").id, second.id)
+        XCTAssertEqual(store.notes.count, 2)
+    }
+
+    func testDistinctDraftFilenamesWithSameBytesRemainDistinctRecoveries() throws {
+        let bytes = Data([9, 0, 9, 255])
+        let firstURL = store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        let secondURL = store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        try bytes.write(to: firstURL); try bytes.write(to: secondURL)
+        let drafts = try store.drafts()
+        let firstDraft = try XCTUnwrap(drafts.first(where: { $0.filename == firstURL.lastPathComponent }))
+        let secondDraft = try XCTUnwrap(drafts.first(where: { $0.filename == secondURL.lastPathComponent }))
+
+        let first = try store.recoverDraft(firstDraft, title: "First source")
+        let second = try store.recoverDraft(secondDraft, title: "Second source")
+
+        XCTAssertNotEqual(first.id, second.id)
+        XCTAssertEqual(store.notes.count, 2)
+        XCTAssertEqual(try Data(contentsOf: XCTUnwrap(store.audioURL(for: first))), bytes)
+        XCTAssertEqual(try Data(contentsOf: XCTUnwrap(store.audioURL(for: second))), bytes)
+    }
+
+    func testFinishRecoveryRejectsMissingOrCorruptLibraryAudioAndKeepsDraft() throws {
+        let bytes = Data([11, 12, 13, 14])
+        let missingURL = store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        try bytes.write(to: missingURL)
+        let missingDraft = try XCTUnwrap(store.drafts().first(where: { $0.url.standardizedFileURL == missingURL.standardizedFileURL }))
+        let missingRecovery = try store.recoverDraft(missingDraft)
+        try FileManager.default.removeItem(at: XCTUnwrap(store.audioURL(for: missingRecovery)))
+
+        XCTAssertThrowsError(try store.recoverDraft(missingDraft))
+        XCTAssertThrowsError(try store.finishDraftRecovery(missingDraft, for: missingRecovery))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: missingURL.path))
+
+        let corruptURL = store.recordingDraftDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        try bytes.write(to: corruptURL)
+        let corruptDraft = try XCTUnwrap(store.drafts().first(where: { $0.url.standardizedFileURL == corruptURL.standardizedFileURL }))
+        let corruptRecovery = try store.recoverDraft(corruptDraft)
+        try Data([1, 1, 1]).write(to: XCTUnwrap(store.audioURL(for: corruptRecovery)))
+
+        XCTAssertThrowsError(try store.recoverDraft(corruptDraft))
+        XCTAssertThrowsError(try store.finishDraftRecovery(corruptDraft, for: corruptRecovery))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: corruptURL.path))
+        XCTAssertEqual(store.notes.count, 2)
+    }
+
+    func testExistingIndexWithoutRecoveryFingerprintStillLoads() throws {
+        let existing = try store.createNote(title: "Before recovery", body: "Existing library entry")
+        var index = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: store.indexURL)) as? [String: Any])
+        var notes = try XCTUnwrap(index["notes"] as? [[String: Any]])
+        notes[0].removeValue(forKey: "recoveredDraftFingerprint")
+        index["notes"] = notes
+        let oldFormat = try JSONSerialization.data(withJSONObject: index, options: [.sortedKeys])
+        try oldFormat.write(to: store.indexURL)
+
+        let reopened = CaptureStore(directory: store.directory); try reopened.load()
+        XCTAssertEqual(reopened.note(id: existing.id)?.body, "Existing library entry")
+        XCTAssertNil(reopened.note(id: existing.id)?.recoveredDraftFingerprint)
     }
 
     func testInvalidSegmentsAndSymlinkSourcesCannotChangeLibrary() throws {

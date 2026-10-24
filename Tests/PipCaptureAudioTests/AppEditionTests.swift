@@ -12,7 +12,7 @@ final class AppEditionTests: XCTestCase {
             XCTAssertEqual(try XCTUnwrap(AppEdition(rawValue: edition.rawValue)), edition)
             XCTAssertFalse(edition.storageName.contains("/"))
             XCTAssertFalse(edition.storageName.contains("\\"))
-            XCTAssertEqual(edition.version, edition.hasExtras ? "0.2.0-alpha.2" : "0.1.0-alpha.2")
+            XCTAssertEqual(edition.version, edition.hasExtras ? "0.2.0-alpha.3" : "0.1.0-alpha.3")
         }
         // Existing Pip Core libraries and native permission identity stay reachable.
         XCTAssertEqual(AppEdition.pipCore.bundleID, "com.pipreps.capture")

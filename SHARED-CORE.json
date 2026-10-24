@@ -1,22 +1,22 @@
 {
   "repository": "https://github.com/Ghostzy0/pip-capture",
-  "commit": "92a2f5e67e9a1afec11819c56a088512b136d260",
+  "commit": "48fb9c664fe6756b6e02e29e3e394450ccaa1afe",
   "license": "MIT",
   "note": "Vendored exact Swift source snapshot; update pin/hashes deliberately, no runtime download. UI selected by replica bundle flag.",
   "sha256": {
-    "Sources/CaptureCore/CaptureStore.swift": "120d76fc2c4069ffe0692cd3bf6380b1e6035650cd28a42b27fee8969fa192c7",
-    "Sources/CaptureCore/Models.swift": "a6db49935b2b20156d1db6674a7847a7f703435e2d4a6d0a385174c711171e08",
+    "Sources/CaptureCore/CaptureStore.swift": "7187c8b372a6d9d8eacf3ca00cb46f7fd7268877e3ba1224e96e8bc23d13d721",
+    "Sources/CaptureCore/Models.swift": "4f6a141f50af96e72dffa298c4e7960e57340723d8177102468fda4513d194f5",
     "Sources/CaptureCore/Recall.swift": "323f5a17f2e56e9111b09e8077f4e5663b6d251c8495e9a206070e55413f0fb1",
-    "Sources/PipCapture/AppEdition.swift": "1e22590ac025b15abe70db2189df4aafeea561e6f89d46e61aa6d798809d78fa",
+    "Sources/PipCapture/AppEdition.swift": "4b0322e257010f6a82b6f00bd282b75f8241f5a56e57453c64ce3ee7085e9d48",
     "Sources/PipCapture/CaptureApp.swift": "936725dd91a50147baa1e8e41177dc43205f38632aa2d5f5fe4d478908689c12",
-    "Sources/PipCapture/CaptureModel.swift": "6ee70c12c1cef7e9b762d41e4cdb534528d7b8bb4f812a62af7160d48c57c317",
+    "Sources/PipCapture/CaptureModel.swift": "f55ce8c1f5c335c198b57afaa2e9148c3051e231167816251659bda293142ac0",
     "Sources/PipCapture/CaptureRecorder.swift": "13519b43af1709a349650dea46491fc91e307f6fdcfd8b95d8baa628cb0da72b",
     "Sources/PipCapture/CaptureSheets.swift": "f38a4d21bd5ecc099ddc75fbc6c59b02ca7dc7a9956898972a3ca1e3b99dacac",
     "Sources/PipCapture/CaptureTheme.swift": "c8832e4779ddb518a9ed2eb1cfed55155a463e7a1bedd2a10b655131fbe0b207",
     "Sources/PipCapture/CaptureView.swift": "1ed38c8d57a39b56abb10746547ee252e72749f7fdd5744a796a4139d6813396",
-    "Sources/PipCapture/CompactRecordingControls.swift": "80329709b05c2417fc88e5805e99fd9b0451342697080f27b0dda4621d6a7e0e",
+    "Sources/PipCapture/CompactRecordingControls.swift": "7a86344f6cc9eb301bdb3dd80a0aad7c08ce6352720243f683e398ce94eba834",
     "Sources/PipCapture/LocalTranscriber.swift": "4ffa44f25e8efa559609e8861912e221b2f3676e341bd677a713b5b6d4ee5b43",
-    "Sources/PipCapture/ReplicaView.swift": "400c9002af214ee0910dd0c91994ebca2b16f5a4fe83bd0e15a47a2c29cce482",
+    "Sources/PipCapture/ReplicaView.swift": "0c05bdabbe1edc751419ad7ee22f9fc61cd957388fd7cf0f6f73a5403f29f80c",
     "Sources/PipCapture/main.swift": "e4f9e268343f4786b55e6c048d8f95851313c4d3dcd77a9963eb8625169081ea"
   }
 }

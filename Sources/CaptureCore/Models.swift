@@ -28,19 +28,25 @@ public struct CaptureNote: Codable, Equatable, Identifiable, Sendable {
     public var originalTranscript: String?
     public var transcriptionEngine: String?
     public var trashedAt: Date?
+    /// Content identity for a recording draft imported through recovery. Optional for old indexes.
+    public var recoveredDraftFingerprint: String?
+    /// Original draft filename paired with the fingerprint to distinguish identical recordings.
+    public var recoveredDraftFilename: String?
 
     public init(id: UUID = UUID(), title: String = "Untitled capture", body: String = "",
                 tags: [String] = [], folder: String = "Inbox", favourite: Bool = false,
                 createdAt: Date = Date(), updatedAt: Date = Date(), audioFilename: String? = nil,
                 duration: Double = 0, segments: [TranscriptSegment] = [], editedSegments: [TranscriptSegment]? = nil,
                 originalTranscript: String? = nil, transcriptionEngine: String? = nil,
-                trashedAt: Date? = nil) {
+                trashedAt: Date? = nil, recoveredDraftFingerprint: String? = nil,
+                recoveredDraftFilename: String? = nil) {
         self.id = id; self.title = title; self.body = body; self.tags = tags; self.folder = folder
         self.favourite = favourite; self.createdAt = createdAt; self.updatedAt = updatedAt
         self.audioFilename = audioFilename; self.duration = duration; self.segments = segments
         self.editedSegments = editedSegments
         self.originalTranscript = originalTranscript; self.transcriptionEngine = transcriptionEngine
-        self.trashedAt = trashedAt
+        self.trashedAt = trashedAt; self.recoveredDraftFingerprint = recoveredDraftFingerprint
+        self.recoveredDraftFilename = recoveredDraftFilename
     }
 }
 
