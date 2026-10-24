@@ -10,7 +10,7 @@ enum AppEdition: String, CaseIterable, Sendable {
     static var isReplica: Bool { current == .neutralCore && Bundle.main.object(forInfoDictionaryKey: "PipCaptureReplica") as? Bool == true }
     static var displayName: String { isReplica ? "Capture Replica" : current.name }
     static var repositoryURL: String { isReplica ? "https://github.com/Ghostzy0/pip-capture-replica" : "https://github.com/Ghostzy0/pip-capture" }
-    static var displayVersion: String { isReplica ? (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0-alpha.1") : current.version }
+    static var displayVersion: String { isReplica ? (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0-alpha.2") : current.version }
     static let infoKey = "PipCaptureEdition"
     static var current: AppEdition { edition(infoDictionary: Bundle.main.infoDictionary) }
 
@@ -40,5 +40,5 @@ enum AppEdition: String, CaseIterable, Sendable {
     var storageName: String { Self.isReplica && self == .neutralCore ? "Capture Replica" : name }
     var isPip: Bool { self == .pipCore || self == .pipPlus }
     var hasExtras: Bool { self == .neutralPlus || self == .pipPlus }
-    var version: String { hasExtras ? "0.2.0-alpha.2" : "0.1.0-alpha.2" }
+    var version: String { hasExtras ? "0.2.0-alpha.3" : "0.1.0-alpha.3" }
 }

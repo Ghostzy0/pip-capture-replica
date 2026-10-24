@@ -46,6 +46,7 @@ struct CompactRecordingControls: View {
             }
         }
         .accessibilityElement(children: .contain)
+        .onAppear { if recorder.state == .idle { collapsed = false } }
         .onChange(of: recorder.state) { _, state in if state == .failed { collapsed = false } }
     }
 }

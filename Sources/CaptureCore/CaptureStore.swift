@@ -1,5 +1,6 @@
 import Foundation
 import Darwin
+import CryptoKit
 
 // Swift's Darwin overlay also exposes `struct flock`, which hides the C function.
 @_silgen_name("flock") private func captureFlock(_ descriptor: Int32, _ operation: Int32) -> Int32
@@ -19,10 +20,13 @@ public final class CaptureStore {
     private var persistedIndexData: Data?
     private let transactionGate = NSRecursiveLock()
     private var transactionDepth = 0
-    private let fm = FileManager.default
+    private let fm: FileManager
     private static let audioExtensions: Set<String> = ["m4a", "wav", "mp3", "aiff", "aif", "caf", "flac", "aac", "ogg", "mp4"]
 
-    public init(directory: URL) { self.directory = directory.standardizedFileURL }
+    public init(directory: URL, fileManager: FileManager = .default) {
+        self.directory = directory.standardizedFileURL
+        self.fm = fileManager
+    }
 
     public static var defaultDirectory: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -179,16 +183,113 @@ public final class CaptureStore {
             }.sorted { $0.modifiedAt > $1.modifiedAt }
     }
 
-    @discardableResult public func recoverDraft(_ draft: RecordingDraft, title: String = "Recovered recording") throws -> CaptureNote {
-        guard (try drafts()).contains(where: { $0.url.standardizedFileURL == draft.url.standardizedFileURL }) else { throw CaptureError.invalid("This recording draft is no longer available.") }
-        let note = try importAudio(from: draft.url, title: title)
-        // Preserve draft until an explicit discard, including after successful recovery.
-        return note
+    @discardableResult public func recoverDraft(_ draft: RecordingDraft, title: String = "Recovered recording",
+                                                duration: Double = 0) throws -> CaptureNote {
+        try withStorageLock {
+            let current = try validatedDraft(draft)
+            let fingerprint = try contentFingerprint(of: current.url)
+            if let recovered = notes.first(where: {
+                $0.recoveredDraftFilename == current.filename && $0.recoveredDraftFingerprint == fingerprint
+            }) {
+                try verifyRecoveredAudio(recovered, expectedFingerprint: fingerprint)
+                return recovered
+            }
+
+            var note = CaptureNote(title: title, duration: duration)
+            normalize(&note)
+            let target = try copyAudio(current.url)
+            do {
+                guard try contentFingerprint(of: target) == fingerprint else {
+                    throw CaptureError.storage("The recording changed while it was being recovered. The draft is preserved; try again.")
+                }
+                note.audioFilename = target.lastPathComponent
+                note.recoveredDraftFingerprint = fingerprint
+                note.recoveredDraftFilename = current.filename
+                try commit(notes + [note])
+                return note
+            } catch { try rollbackImport(target, originalError: error) }
+        }
+    }
+
+    @discardableResult public func recoverDraft(at sourceURL: URL, title: String,
+                                                duration: Double = 0) throws -> CaptureNote {
+        guard let draft = try drafts().first(where: { $0.url.standardizedFileURL == sourceURL.standardizedFileURL }) else {
+            throw CaptureError.invalid("This recording draft is no longer available.")
+        }
+        return try recoverDraft(draft, title: title, duration: duration)
     }
 
     public func discardDraft(_ draft: RecordingDraft) throws {
-        guard (try drafts()).contains(where: { $0.url.standardizedFileURL == draft.url.standardizedFileURL }) else { throw CaptureError.invalid("This recording draft is no longer available.") }
-        do { try fm.removeItem(at: draft.url) } catch { lastError = error.localizedDescription; throw CaptureError.storage("The draft could not be removed.") }
+        try withStorageLock {
+            let url = draft.url.standardizedFileURL
+            guard url.deletingLastPathComponent() == recordingDraftDirectory.standardizedFileURL,
+                  url.lastPathComponent == draft.filename,
+                  Self.audioExtensions.contains(url.pathExtension.lowercased()) else {
+                throw CaptureError.invalid("This recording draft is no longer available.")
+            }
+            // A retry after successful removal is complete. Never follow a changed file at the same path.
+            guard fm.fileExists(atPath: url.path) else { return }
+            try requireRegularFile(url)
+            do { try fm.removeItem(at: url) } catch { lastError = error.localizedDescription; throw CaptureError.storage("The draft could not be removed.") }
+        }
+    }
+
+    public func finishDraftRecovery(_ draft: RecordingDraft, for recoveredNote: CaptureNote) throws {
+        try withStorageLock {
+            let current = try validatedDraft(draft)
+            guard let stored = notes.first(where: { $0.id == recoveredNote.id }),
+                  stored.recoveredDraftFilename == current.filename,
+                  let fingerprint = stored.recoveredDraftFingerprint,
+                  fingerprint == recoveredNote.recoveredDraftFingerprint else {
+                throw CaptureError.storage("The recovered note no longer matches this draft. The source is preserved.")
+            }
+            try verifyRecoveredAudio(stored, expectedFingerprint: fingerprint)
+            guard try contentFingerprint(of: current.url) == fingerprint else {
+                throw CaptureError.storage("The draft changed after recovery. The newer source is preserved for recovery.")
+            }
+            do { try fm.removeItem(at: current.url) }
+            catch { lastError = error.localizedDescription; throw CaptureError.storage("The note is recovered, but its draft could not be removed.") }
+        }
+    }
+
+    public func finishDraftRecovery(at sourceURL: URL, for recoveredNote: CaptureNote) throws {
+        let standardizedURL = sourceURL.standardizedFileURL
+        guard standardizedURL.deletingLastPathComponent() == recordingDraftDirectory.standardizedFileURL else {
+            throw CaptureError.invalid("This recording draft is no longer available.")
+        }
+        guard let draft = try drafts().first(where: { $0.url.standardizedFileURL == standardizedURL }) else {
+            guard !fm.fileExists(atPath: standardizedURL.path) else {
+                throw CaptureError.invalid("The retained recording draft could not be safely identified and was preserved.")
+            }
+            return
+        }
+        try finishDraftRecovery(draft, for: recoveredNote)
+    }
+
+    private func validatedDraft(_ draft: RecordingDraft) throws -> RecordingDraft {
+        guard let current = try drafts().first(where: { $0.url.standardizedFileURL == draft.url.standardizedFileURL }),
+              current.filename == draft.filename else { throw CaptureError.invalid("This recording draft is no longer available.") }
+        return current
+    }
+
+    private func contentFingerprint(of url: URL) throws -> String {
+        try requireRegularFile(url)
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while let chunk = try handle.read(upToCount: 1024 * 1024), !chunk.isEmpty { hasher.update(data: chunk) }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func verifyRecoveredAudio(_ note: CaptureNote, expectedFingerprint: String) throws {
+        guard let audioFilename = note.audioFilename else {
+            throw CaptureError.storage("The recovered recording is missing its library audio. The draft is preserved for recovery.")
+        }
+        let recoveredAudio = try ownedAudioURL(audioFilename)
+        guard fm.fileExists(atPath: recoveredAudio.path),
+              try contentFingerprint(of: recoveredAudio) == expectedFingerprint else {
+            throw CaptureError.storage("The recovered recording audio is missing or changed. The draft is preserved for recovery.")
+        }
     }
 
     @discardableResult public func exportMarkdown(noteID: UUID, to destinationDirectory: URL) throws -> URL {
