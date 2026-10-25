@@ -36,7 +36,7 @@ struct PipCaptureApp: App {
             CommandGroup(replacing: .appInfo) { Button("About \(AppEdition.displayName)") { model.showAbout() } }
             CommandGroup(replacing: .newItem) { Button("New text capture") { model.createText() }.keyboardShortcut("n"); Button("Import text or audio…") { model.importFile() }.keyboardShortcut("i", modifiers: [.command, .shift]) }
             CommandGroup(replacing: .appSettings) { Button("Settings…") { model.showSettings() }.keyboardShortcut(",") }
-            CommandMenu("Capture") { Button("Record…") { model.recordingSheet = true }.keyboardShortcut("r", modifiers: [.command, .shift]); Button("Save changes") { if let note = model.selected { _ = model.save(note) } }.keyboardShortcut("s"); Button("Stop transcription") { model.cancelTranscription() }.disabled(model.transcribingID == nil) }
+            CommandMenu("Capture") { Button("Record…") { model.recordingSheet = true }.keyboardShortcut("r", modifiers: [.command, .shift]); Button("Save changes") { _ = model.saveSelected() }.keyboardShortcut("s"); Button("Stop transcription") { model.cancelTranscription() }.disabled(model.transcribingID == nil) }
         }
     }
 }

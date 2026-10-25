@@ -5,6 +5,7 @@ import CaptureCore
 struct RecordingSheet: View {
     @ObservedObject var model: CaptureModel
     @ObservedObject var recorder: CaptureRecorder
+    @Environment(\.colorScheme) private var scheme
     @Environment(\.dismiss) private var dismiss
     var embedded = false
     var onClose: (() -> Void)?
@@ -14,6 +15,21 @@ struct RecordingSheet: View {
     @State private var confirmingDiscard = false
     private var active: Bool { recorder.state == .recording || recorder.state == .paused || recorder.state == .requestingPermission || recorder.draftURL != nil }
     var body: some View {
+        Group {
+            if embedded { embeddedContent }
+            else { modalContent }
+        }
+        .interactiveDismissDisabled(active)
+        .confirmationDialog("Discard this recording? It will not be saved.", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+            Button("Discard recording", role: .destructive) {
+                do { try recorder.cancel(); close() }
+                catch { self.recordingIssue = "The draft could not be removed. It is kept for recovery." }
+            }
+            Button("Keep recording", role: .cancel) { }
+        }
+    }
+
+    private var modalContent: some View {
         VStack(spacing: CaptureTheme.section) {
             HStack { Text("Voice capture").font(CaptureTheme.font(20, weight: .semibold)); Spacer(); if let onCollapse { Button("Collapse", action: onCollapse).accessibilityLabel("Collapse recording controls") }; Button("Close") { close() }.disabled(active) }
             PipPebble(busy: recorder.state == .recording)
@@ -23,41 +39,80 @@ struct RecordingSheet: View {
             Text("Audio stays on this Mac. Pause whenever you need to.").font(CaptureTheme.font(14)).multilineTextAlignment(.center)
             if let step = recorder.permission.nextStep { Text(step).font(CaptureTheme.font(13)).foregroundStyle(.red).textSelection(.enabled) }
             if let message = recordingIssue ?? recorder.lastError { Text(message).font(CaptureTheme.font(13)).foregroundStyle(.red).textSelection(.enabled) }
-            HStack(spacing: CaptureTheme.gap) {
-                if recorder.state == .recording || recorder.state == .paused {
-                    Button(recorder.state == .paused ? "Resume" : "Pause") {
-                        do { if recorder.state == .paused { try recorder.resume() } else { try recorder.pause() } }
-                        catch { self.recordingIssue = "Recording could not change state. Save the recording or close it safely." }
-                    }.buttonStyle(CaptureButtonStyle())
-                    Button("Save recording") { if !model.saveRecording() { recordingIssue = "The recording could not be saved. Its draft is kept. Close this window and use Recover recording in the sidebar." } }.buttonStyle(CaptureButtonStyle(primary: true))
-                } else if recorder.state == .failed && recorder.draftURL != nil {
-                    Button("Keep draft and close") {
-                        do { _ = try recorder.keepDraftAndReset(); model.refreshDrafts(); close() }
-                        catch { recordingIssue = "The draft could not be detached safely. It is kept in storage. You can quit and recover it when you reopen." }
-                    }.buttonStyle(CaptureButtonStyle(primary: true))
-                } else if !active && recordingIssue == nil {
-                    Button("Start recording") {
-                        Task {
-                            do { recordingIssue = nil; try await recorder.requestPermissionAndStart() }
-                            catch is CancellationError { }
-                            catch { self.recordingIssue = error.localizedDescription }
-                        }
-                    }.buttonStyle(CaptureButtonStyle(primary: true)).disabled(model.loadFailure)
-                }
-                if !active && recordingIssue != nil { Button("Close and recover later") { close() }.buttonStyle(CaptureButtonStyle(primary: true)) }
-                if active {
-                    Button("Discard", role: .destructive) { confirmingDiscard = true }.buttonStyle(CaptureButtonStyle())
-                }
-            }
+            actionControls
             if recorder.state == .requestingPermission { Text("Waiting for microphone access.").font(CaptureTheme.font(13)); ProgressView().controlSize(.small) }
         }.padding(CaptureTheme.large).frame(maxWidth: embedded ? .infinity : 470)
-        .interactiveDismissDisabled(active)
-        .confirmationDialog("Discard this recording? It will not be saved.", isPresented: $confirmingDiscard, titleVisibility: .visible) {
-            Button("Discard recording", role: .destructive) {
-                do { try recorder.cancel(); close() }
-                catch { self.recordingIssue = "The draft could not be removed. It is kept for recovery." }
+
+    }
+
+    private var embeddedContent: some View {
+        VStack(alignment: .leading, spacing: CaptureTheme.gap) {
+            HStack {
+                Text("Voice capture").font(CaptureTheme.font(18, weight: .semibold))
+                Spacer()
+                if let onCollapse { Button("Collapse", action: onCollapse).accessibilityLabel("Collapse recording controls") }
+                Button("Close") { close() }.disabled(active)
             }
-            Button("Keep recording", role: .cancel) { }
+            HStack(spacing: CaptureTheme.inset) {
+                PipPebble(busy: recorder.state == .recording)
+                    .frame(width: 48, height: 48)
+                VStack(alignment: .leading, spacing: CaptureTheme.small) {
+                    Text(recorder.state == .recording ? "Listening" : recorder.state == .paused ? "Paused" : "Keep the original.")
+                        .font(CaptureTheme.font(16, weight: .semibold))
+                    Text(timecode(recorder.duration)).font(.system(size: 26, weight: .medium, design: .monospaced)).monospacedDigit()
+                        .accessibilityLabel("Recording duration \(timecode(recorder.duration))")
+                    ProgressView(value: Double(recorder.meter), total: 1).frame(maxWidth: 250)
+                        .accessibilityLabel("Microphone input level").accessibilityValue("\(Int(recorder.meter * 100)) percent")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            Text("Audio stays on this Mac. Pause whenever you need to.")
+                .font(CaptureTheme.font(13)).foregroundStyle(CaptureTheme.secondary(scheme))
+            if recorder.state == .requestingPermission {
+                HStack(spacing: CaptureTheme.small) {
+                    Text("Waiting for microphone access.").font(CaptureTheme.font(13))
+                    ProgressView().controlSize(.small)
+                }
+            }
+            if recorder.permission.nextStep != nil || recordingIssue != nil || recorder.lastError != nil {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: CaptureTheme.small) {
+                        if let step = recorder.permission.nextStep { Text(step).font(CaptureTheme.font(13)).foregroundStyle(.red).textSelection(.enabled) }
+                        if let message = recordingIssue ?? recorder.lastError { Text(message).font(CaptureTheme.font(13)).foregroundStyle(.red).textSelection(.enabled) }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }.frame(maxHeight: 56)
+            }
+            actionControls
+        }
+        .padding(.horizontal, CaptureTheme.inset)
+        .padding(.vertical, CaptureTheme.small)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var actionControls: some View {
+        HStack(spacing: CaptureTheme.gap) {
+            if recorder.state == .recording || recorder.state == .paused {
+                Button(recorder.state == .paused ? "Resume" : "Pause") {
+                    do { if recorder.state == .paused { try recorder.resume() } else { try recorder.pause() } }
+                    catch { self.recordingIssue = "Recording could not change state. Save the recording or close it safely." }
+                }.buttonStyle(CaptureButtonStyle())
+                Button("Save recording") { if !model.saveRecording() { recordingIssue = "The recording could not be saved. Its draft is kept. Close this window and use Recover recording in the sidebar." } }.buttonStyle(CaptureButtonStyle(primary: true))
+            } else if recorder.state == .failed && recorder.draftURL != nil {
+                Button("Keep draft and close") {
+                    do { _ = try recorder.keepDraftAndReset(); model.refreshDrafts(); close() }
+                    catch { recordingIssue = "The draft could not be detached safely. It is kept in storage. You can quit and recover it when you reopen." }
+                }.buttonStyle(CaptureButtonStyle(primary: true))
+            } else if !active && recordingIssue == nil {
+                Button("Start recording") {
+                    Task {
+                        do { recordingIssue = nil; try await recorder.requestPermissionAndStart() }
+                        catch is CancellationError { }
+                        catch { self.recordingIssue = error.localizedDescription }
+                    }
+                }.buttonStyle(CaptureButtonStyle(primary: true)).disabled(model.loadFailure)
+            }
+            if !active && recordingIssue != nil { Button("Close and recover later") { close() }.buttonStyle(CaptureButtonStyle(primary: true)) }
+            if active { Button("Discard", role: .destructive) { confirmingDiscard = true }.buttonStyle(CaptureButtonStyle()) }
         }
     }
 }

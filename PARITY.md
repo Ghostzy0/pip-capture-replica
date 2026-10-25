@@ -24,3 +24,6 @@ Source documentation: [Mem Voice Mode](https://get.mem.ai/features/voice), [Mem 
 Plus (both appearances) adds the same collapsible in-window recorder and selectable library tag filter. These are additions to the declared Core workflow, not reference parity claims. 42 shared tests and all four package builds pass; final native Plus acceptance remains pending.
 
 24 October 2026 candidate: 49 shared tests and all four custom packages plus the separate replica passed local source qualification. Recovery retry identity and retained-source safety have new regressions. The changed recorder and appearance paths still need native acceptance. See [current test evidence](TESTING.md); the 42-test result above is the earlier 23 October snapshot. Clean exported-checkout checks passed as described in TESTING.md; this does not establish native acceptance.
+
+
+25 October 2026 Replica candidate note: alpha.3 vendors the selected-note save helper from the current shared source pin. The native `⌘S` save/restore case was observed only in Pip Plus alpha.4; it has not been verified in Replica. Replica's native minimum-size layout and export remain unverified. Signed-in Voicenotes workflows and full fidelity remain incomplete. This is a source-candidate update, not a parity pass.

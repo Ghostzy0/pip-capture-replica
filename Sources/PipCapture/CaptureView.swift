@@ -29,8 +29,7 @@ struct CaptureView: View {
                     else { emptyDetail }
                 }.frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity)
             }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+            .frame(minHeight: 0, maxHeight: .infinity)
             if AppEdition.current.hasExtras && model.recordingSheet {
                 CompactRecordingControls(model: model, recorder: model.recorder, collapsed: $recorderCollapsed)
                     .background(CaptureTheme.surface(scheme, oat: lookTheme == "oat"))
@@ -41,6 +40,7 @@ struct CaptureView: View {
         .preferredColorScheme(lookMode == "system" ? nil : lookMode == "dark" ? .dark : .light)
         .font(CaptureTheme.font(14))
         .frame(minWidth: 900, minHeight: 600)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: Binding(get: { model.recordingSheet && !AppEdition.current.hasExtras }, set: { model.recordingSheet = $0 })) { RecordingSheet(model: model, recorder: model.recorder) }
         .sheet(isPresented: $model.settingsSheet) { CaptureSettings(model: model) }
         .sheet(isPresented: $model.aboutSheet) { CaptureAbout() }
@@ -53,47 +53,51 @@ struct CaptureView: View {
         }
     }
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: CaptureTheme.section) {
-            HStack(spacing: CaptureTheme.small) { PipPebble(busy: model.transcribingID != nil, cue: model.confirmedSaveCount).scaleEffect(0.68).frame(width: 40, height: 40); Text(AppEdition.current.name).font(CaptureTheme.font(20, weight: .semibold)) }
-                .padding(.top, CaptureTheme.small)
-            VStack(alignment: .leading, spacing: CaptureTheme.small) {
-                Text("A place for what matters.").font(CaptureTheme.font(15, weight: .medium))
-                Text("Saved on this Mac.").font(CaptureTheme.font(13)).foregroundStyle(CaptureTheme.secondary(scheme))
-            }
-            VStack(spacing: 4) {
-                nav(.inbox, icon: "tray")
-                nav(.favourites, icon: "star")
-                nav(.recall, icon: "text.magnifyingglass")
-            }
-            if !model.folders.isEmpty {
-                VStack(alignment: .leading, spacing: CaptureTheme.small) {
-                    Text("Folders").font(CaptureTheme.font(12, weight: .medium)).foregroundStyle(CaptureTheme.secondary(scheme)).padding(.horizontal, CaptureTheme.small)
-                    ScrollView {
+        GeometryReader { geometry in
+            ScrollView(.vertical) {
+                VStack(alignment: .leading, spacing: CaptureTheme.section) {
+                    HStack(spacing: CaptureTheme.small) { PipPebble(busy: model.transcribingID != nil, cue: model.confirmedSaveCount).scaleEffect(0.68).frame(width: 40, height: 40); Text(AppEdition.current.name).font(CaptureTheme.font(20, weight: .semibold)) }
+                        .padding(.top, CaptureTheme.small)
+                    VStack(alignment: .leading, spacing: CaptureTheme.small) {
+                        Text("A place for what matters.").font(CaptureTheme.font(15, weight: .medium))
+                        Text("Saved on this Mac.").font(CaptureTheme.font(13)).foregroundStyle(CaptureTheme.secondary(scheme))
+                    }
                     VStack(spacing: 4) {
-                    ForEach(model.folders, id: \.self) { name in
-                        Button { model.section = .inbox; model.folder = name; model.selectedID = nil } label: {
-                            Label(name, systemImage: "folder").lineLimit(1).frame(maxWidth: .infinity, alignment: .leading).padding(CaptureTheme.small)
-                                .background(model.folder == name ? CaptureTheme.fill(scheme) : .clear, in: RoundedRectangle(cornerRadius: CaptureTheme.radius))
-                        }.buttonStyle(.plain)
+                        nav(.inbox, icon: "tray")
+                        nav(.favourites, icon: "star")
+                        nav(.recall, icon: "text.magnifyingglass")
                     }
+                    if !model.folders.isEmpty {
+                        VStack(alignment: .leading, spacing: CaptureTheme.small) {
+                            Text("Folders").font(CaptureTheme.font(12, weight: .medium)).foregroundStyle(CaptureTheme.secondary(scheme)).padding(.horizontal, CaptureTheme.small)
+                            ScrollView {
+                                VStack(spacing: 4) {
+                                    ForEach(model.folders, id: \.self) { name in
+                                        Button { model.section = .inbox; model.folder = name; model.selectedID = nil } label: {
+                                            Label(name, systemImage: "folder").lineLimit(1).frame(maxWidth: .infinity, alignment: .leading).padding(CaptureTheme.small)
+                                                .background(model.folder == name ? CaptureTheme.fill(scheme) : .clear, in: RoundedRectangle(cornerRadius: CaptureTheme.radius))
+                                        }.buttonStyle(.plain)
+                                    }
+                                }
+                            }.frame(maxHeight: 240)
+                        }
                     }
-                    }.frame(maxHeight: 240)
-                }
-            }
-            Spacer(minLength: CaptureTheme.section)
-            if !model.recoveredDrafts.isEmpty {
-                VStack(alignment: .leading, spacing: CaptureTheme.small) {
-                    Text("An unfinished recording was found.").font(CaptureTheme.font(13))
-                    Button("Recover recording") { model.recoverDraft(model.recoveredDrafts[0]) }.buttonStyle(CaptureButtonStyle())
-                }
-            }
-            VStack(spacing: 4) {
-                nav(.trash, icon: "trash")
-                Button { model.showSettings() } label: { Label("Settings", systemImage: "gearshape").frame(maxWidth: .infinity, alignment: .leading).padding(CaptureTheme.small) }.buttonStyle(.plain)
-                Button { model.showAbout() } label: { Label("About Capture", systemImage: "info.circle").frame(maxWidth: .infinity, alignment: .leading).padding(CaptureTheme.small) }.buttonStyle(.plain)
-            }
-            Button { model.recordingSheet = true } label: { Label("Record a thought", systemImage: "mic").frame(maxWidth: .infinity) }.buttonStyle(CaptureButtonStyle(primary: true)).disabled(model.loadFailure)
-        }.padding(CaptureTheme.inset).background(CaptureTheme.surface(scheme, oat: lookTheme == "oat"))
+                    Spacer(minLength: CaptureTheme.section)
+                    if !model.recoveredDrafts.isEmpty {
+                        VStack(alignment: .leading, spacing: CaptureTheme.small) {
+                            Text("An unfinished recording was found.").font(CaptureTheme.font(13))
+                            Button("Recover recording") { model.recoverDraft(model.recoveredDrafts[0]) }.buttonStyle(CaptureButtonStyle())
+                        }
+                    }
+                    VStack(spacing: 4) {
+                        nav(.trash, icon: "trash")
+                        Button { model.showSettings() } label: { Label("Settings", systemImage: "gearshape").frame(maxWidth: .infinity, alignment: .leading).padding(CaptureTheme.small) }.buttonStyle(.plain)
+                        Button { model.showAbout() } label: { Label("About Capture", systemImage: "info.circle").frame(maxWidth: .infinity, alignment: .leading).padding(CaptureTheme.small) }.buttonStyle(.plain)
+                    }
+                    Button { model.recordingSheet = true } label: { Label("Record a thought", systemImage: "mic").frame(maxWidth: .infinity) }.buttonStyle(CaptureButtonStyle(primary: true)).disabled(model.loadFailure)
+                }.padding(CaptureTheme.inset).frame(minHeight: geometry.size.height)
+            }.background(CaptureTheme.surface(scheme, oat: lookTheme == "oat"))
+        }
     }
     private func nav(_ section: CaptureModel.Section, icon: String) -> some View {
         Button { model.section = section; model.folder = ""; model.selectedID = nil } label: {
@@ -220,7 +224,7 @@ struct NoteEditor: View {
                         .background(CaptureTheme.surface(scheme, oat: false), in: RoundedRectangle(cornerRadius: CaptureTheme.radius))
                         .overlay(RoundedRectangle(cornerRadius: CaptureTheme.radius).stroke(CaptureTheme.line(scheme))).accessibilityLabel("Editable note")
                     HStack(spacing: CaptureTheme.small) {
-                        Button("Save changes") { _ = model.save(note) }.buttonStyle(CaptureButtonStyle(primary: true)).keyboardShortcut("s").disabled(model.edits[id] == nil)
+                        Button("Save changes") { _ = model.saveSelected() }.buttonStyle(CaptureButtonStyle(primary: true)).disabled(model.edits[id] == nil)
                         Text(model.edits[id] == nil ? "Saved on this Mac" : "Unsaved changes").font(CaptureTheme.font(12)).foregroundStyle(CaptureTheme.secondary(scheme))
                         Spacer()
                     }

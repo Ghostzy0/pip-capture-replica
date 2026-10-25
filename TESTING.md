@@ -1,8 +1,12 @@
 # Test evidence
 
-## Current candidate — 24 October 2026
+## Current source candidate — 25 October 2026
 
-Replica 0.1.0-alpha.2 uses the deliberately updated shared-source pin. 49 shared tests passed with zero failures/skips, including recovery retry/reopen/source safety and optional metadata compatibility. The shared source and local replica package/configuration/ad-hoc signature checks passed. This does not qualify new native appearance, microphone, full accessibility, signed-in reference workflows or complete fidelity. Previous 23 October reference/ASR/comparison evidence is retained below for unchanged paths; clean exported-checkout evidence is recorded below.
+Replica 0.1.0-alpha.3 (build 3) is an unreleased source candidate. Its 14 shared Swift files are vendored from the public custom Capture source pin in `SHARED-CORE.json`; the static file-hash verifier is the only check performed in this local-draft preparation. The selected-note save helper and its regression test are included. A matching-source local candidate passed all seven edition tests and Replica package/configuration/strict-signature checks; the packaged Replica executable SHA-256 is `d3eb0e903b999bd9aee0da943b1274ea459767195626ed1d6b1c4da3da2e0288`. This standalone checkout still needs its clean-build exact-head CI and native `⌘S` verification.
+
+Previously reported shared model/data test results (50 tests in the current batch) are reused evidence, not a fresh run of this checkout. A native `⌘S` result from Pip Plus does not establish Replica behavior. Replica alpha.3 remains native-unqualified; minimum-size layout acceptance, export verification, microphone workflow, full accessibility, signed-in reference workflows, and complete reference fidelity remain open. No downloadable binary is qualified or offered.
+
+Previous 24 October and 23 October results below are historical snapshots for their named source states; they are not evidence for this candidate. Clean exported-checkout evidence is recorded below.
 
 23 October2026. Qualification host: Apple Silicon arm64, macOS27.0.1, Swift6.4, full Xcode. Deployment target macOS14; older OS/Intel runtime unverified.
 
