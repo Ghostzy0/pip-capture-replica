@@ -4,7 +4,7 @@ An experimental original local macOS reconstruction project targeting documented
 
 This is the canonical Neutral Core reproduction effort. [Pip Capture](https://github.com/Ghostzy0/pip-capture) is the separate custom repository for Neutral Plus, Pip Core and Pip Plus. The source is shared through an exact [commit and file-hash pin](SHARED-CORE.json), rather than four drifting backends. The additional MIT WhisperNotes snapshot is provenance comparison only, not the primary target.
 
-**Current source candidate: 0.1.0-alpha.3, build 3 (unreleased).** The published [alpha.2 source preview](https://github.com/Ghostzy0/pip-capture-replica/releases/tag/v0.1.0-alpha.2) remains unchanged; no downloadable binary is offered. The exact shared-source pin is listed in [SHARED-CORE.json](SHARED-CORE.json). This source candidate includes the selected-note save helper, but its native `⌘S` path has not been verified in Capture Replica; a Plus result is not Replica acceptance.
+**Current source candidate: 0.1.0-alpha.3, build 3 (unreleased).** The published [alpha.2 source preview](https://github.com/Ghostzy0/pip-capture-replica/releases/tag/v0.1.0-alpha.2) remains unchanged; no downloadable binary is offered. The exact shared-source pin is listed in [SHARED-CORE.json](SHARED-CORE.json). This versioned Replica package passed one bounded native synthetic text-save/reopen workflow in R4: focused-title ⌘S retained the title; body plus two tags saved with ⌘S and survived normal quit/reopen. Favourite remained default off; no favourite toggle or trash/restore was tested. This is limited to that scenario and does not establish the other variants, full fidelity or binary acceptance.
 
 ## What works and what remains
 

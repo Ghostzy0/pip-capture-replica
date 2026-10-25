@@ -2,7 +2,7 @@
 
 ## 0.1.0-alpha.3 candidate — 25 October 2026
 
-Vendored the current 14-file shared Capture source pin and its selected-note save helper/regression coverage; Replica remains alpha.3, build 3. Published alpha.2 is unchanged. Matching-source local edition and package/configuration/signature checks passed. This standalone checkout’s clean-build CI, Replica-native `⌘S`, export, minimum-size UI and full reference acceptance remain open. No binary release is qualified. See [TESTING](TESTING.md) and [SHARED-CORE.json](SHARED-CORE.json) for boundaries and source provenance.
+Vendored the current 14-file shared Capture source pin and its selected-note save helper/regression coverage; Replica remains alpha.3, build 3. Published alpha.2 is unchanged. Matching-source local edition and package/configuration/signature checks passed. R4 passed one versioned Replica text-save case: title-focused ⌘S, then body and two tags saved with ⌘S, survived normal quit/reopen. Favourite stayed default off; favourite toggle and trash/restore were not tested. Four native JPG/AX captures are saved across the tested Neutral Core and Replica cases, with parent and independent saved-evidence review confirming this bounded result. Export, minimum-size UI, full reference acceptance, clean-build CI and binary qualification remain open. See [TESTING](TESTING.md) and [SHARED-CORE.json](SHARED-CORE.json) for boundaries and source provenance.
 
 ## 0.1.0-alpha.2 candidate — 24 October 2026
 
