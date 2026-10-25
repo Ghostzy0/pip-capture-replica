@@ -3,7 +3,7 @@
 <plist version="1.0"><dict>
 <key>CFBundleName</key><string>Pip Capture</string><key>CFBundleDisplayName</key><string>Pip Capture</string>
 <key>CFBundleIdentifier</key><string>com.pipreps.capture</string><key>CFBundleExecutable</key><string>PipCapture</string>
-<key>CFBundleVersion</key><string>3</string><key>CFBundleShortVersionString</key><string>0.1.0-alpha.3</string>
+<key>CFBundleVersion</key><string>4</string><key>CFBundleShortVersionString</key><string>0.1.0-alpha.4</string>
 <key>CFBundlePackageType</key><string>APPL</string><key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSMicrophoneUsageDescription</key><string>Pip Capture records audio only when you choose Start recording. Audio stays on your Mac.</string>
 <key>NSHighResolutionCapable</key><true/><key>NSSupportsAutomaticTermination</key><false/>

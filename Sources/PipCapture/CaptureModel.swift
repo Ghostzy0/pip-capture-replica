@@ -94,6 +94,10 @@ final class CaptureModel: ObservableObject {
         }
         catch { message = "Changes could not be saved. Your edits are kept here. Check storage space and try again."; return false }
     }
+    @discardableResult func saveSelected() -> Bool {
+        guard let note = selected else { return false }
+        return save(note)
+    }
     func saveAll() -> Bool {
         for note in Array(edits.values) { if !save(note) { return false } }
         return true

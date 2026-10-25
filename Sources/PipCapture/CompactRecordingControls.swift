@@ -39,10 +39,10 @@ struct CompactRecordingControls: View {
                     Text(message).font(CaptureTheme.font(13)).foregroundStyle(.red).textSelection(.enabled).padding(.horizontal, CaptureTheme.inset).padding(.bottom, CaptureTheme.small)
                 }
             } else {
-                ScrollView {
-                    RecordingSheet(model: model, recorder: recorder, embedded: true,
-                                   onClose: { model.recordingSheet = false }, onCollapse: { collapsed = true })
-                }.frame(maxHeight: 320)
+                RecordingSheet(model: model, recorder: recorder, embedded: true,
+                               onClose: { model.recordingSheet = false }, onCollapse: { collapsed = true })
+                    .fixedSize(horizontal: false, vertical: true)
+                    .layoutPriority(1)
             }
         }
         .accessibilityElement(children: .contain)

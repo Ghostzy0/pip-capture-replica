@@ -70,6 +70,34 @@ final class CaptureModelTests: XCTestCase {
     }
 
     @MainActor
+    func testSaveSelectedPersistsCurrentPendingEditorValues() throws {
+        try withModel { model, _ in
+            model.createText()
+            let initial = try XCTUnwrap(model.selected)
+            var pending = initial
+            pending.title = "Synthetic current editor title"
+            pending.body = "Synthetic current editor body"
+            pending.favourite = true
+            model.edit(pending)
+
+            XCTAssertEqual(model.selected?.title, pending.title)
+            XCTAssertTrue(model.saveSelected())
+
+            let saved = try XCTUnwrap(model.store.note(id: initial.id))
+            XCTAssertEqual(saved.title, pending.title)
+            XCTAssertEqual(saved.body, pending.body)
+            XCTAssertTrue(saved.favourite)
+            XCTAssertNil(model.edits[initial.id])
+
+            let reopened = CaptureStore(directory: model.store.directory)
+            try reopened.load()
+            XCTAssertEqual(reopened.note(id: initial.id)?.title, pending.title)
+            XCTAssertEqual(reopened.note(id: initial.id)?.body, pending.body)
+            XCTAssertTrue(reopened.note(id: initial.id)?.favourite == true)
+        }
+    }
+
+    @MainActor
     func testRetentionSavesPendingEditsAndQuitCannotResurrectCapture() throws {
         try withModel { model, _ in
             let original = try model.store.createNote(body: "Old saved text")

@@ -15,3 +15,8 @@ Baseline hardening: unique recording temp name, all audio/backend/default Markdo
 Verified optional local ASR weight available on qualification host: `ggml-small.bin`, 487601967 bytes, SHA256 `1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b`, matched the Hugging Face ggerganov/whisper.cpp LFS index on 23 October. Reused read-only for synthetic tests; no weight redistributed. Intended engine source revision `231638a0717b7822784297e5980965ffcec05810` (official ggml-org/whisper.cpp), not yet built at this checkpoint.
 
 Audit-driven baseline patches (qualification pending): Markdown exports now include stable note IDs, reject dot/path/symlink folder escapes, preserve unknown files and collisions, and use nonrecursive empty-folder deletion. Folder metadata changes only follow successful filesystem work. Recorder temp audio is unique per instance. These are deliberate safety changes to the upstream comparison edition, not claims that upstream shipped them.
+
+
+## Shared Capture source pin — 25 October 2026
+
+The Replica source candidate vendors the 14 Swift files identified by `SHARED-CORE.json` from the public custom Capture source repository at commit `7aa353b679c64ae87ab41c7c97a4724c8e730d3c`. The manifest records per-file SHA256 values. Existing MIT and upstream notices remain in place; the shared source is vendored locally and is not fetched at runtime. This pin records source provenance only; it does not establish Replica-specific native behavior or reference fidelity.
